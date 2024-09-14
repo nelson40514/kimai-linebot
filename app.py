@@ -5,7 +5,6 @@ import pytz
 import requests
 
 
-from pymongo import MongoClient
 from argparse import ArgumentParser
 from datetime import datetime
 from flask import Flask, request, abort
@@ -47,10 +46,6 @@ if channel_secret is None or channel_access_token is None:
     print('Specify LINE_CHANNEL_SECRET and LINE_CHANNEL_ACCESS_TOKEN as environment variables.')
     sys.exit(1)
 
-MONGODB_URI = os.getenv('MONGODB_URI', None)
-if MONGODB_URI is None:
-    print('Specify MONGODB_URI as environment variables.')
-    sys.exit(1)
 
 KIMAI_BASE_URL = os.getenv('KIMAI_BASE_URL')
 
@@ -62,11 +57,7 @@ configuration = Configuration(
     access_token=channel_access_token
 )
 
-# 初始化 MongoDB
-client = MongoClient(MONGODB_URI)
-db = client.kimai_bot
-users_collection = db.users
-
+from db import users_collection
 
 # 設置時區
 TZ = pytz.timezone('Asia/Taipei')
