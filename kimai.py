@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import pytz
 import requests
 
@@ -55,30 +56,16 @@ def get_user_info(user):
 
 # 開始時間追蹤
 def kimai_start_timesheet(user, project_id, activity_id, description):
-    params = {
-        "begin": datetime.now(TZ).isoformat(),
+    data = {
         "project": project_id,
         "activity": activity_id,
-        # "end": "<dateTime>",
         "description": description,
-        # "fixedRate": "<number>",
-        # "hourlyRate": 280,
-        "user": get_user_info(user)["id"],
-        "tags": [],
-        "exported": False,
-        "billable": True,
+        "tags": "",
     }
-    # response = kimai_api_call("POST", "timesheets", user, param=params)
-    response = params
+    response = kimai_api_call("POST", "timesheets", user, json=data)
     return response
 
 # 停止時間追蹤
-def kimai_stop_timesheet(user, timesheet_id):
-    current_activity = user.get("current_activity")
-    if not current_activity:
-        return None
-    
-    data = {"end": datetime.now(TZ).isoformat()}
-    # response = kimai_api_call("timesheets/{timesheet_id}", user, json=data)
-    response = data
+def kimai_stop_timesheet(user, current_timesheet_id):
+    response = kimai_api_call("GET", f"timesheets/{current_timesheet_id}/stop", user)
     return response

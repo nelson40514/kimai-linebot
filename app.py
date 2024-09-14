@@ -344,16 +344,27 @@ def handle_message(event):
             project = user["current_activity"]["project"]
             activity = user["current_activity"]["activity"]
             description = user["current_activity"]["description"]
-            update_user(user_id, {"current_activity": None})
-            res = kimai_start_timesheet(user, project["id"], activity["id"], description)
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[
-                        TextMessage(text=f"開始成功{json.dumps(res)}", quick_reply=get_quick_reply_menu())
-                    ]
+            try:
+                res = kimai_start_timesheet(user, project["id"], activity["id"], description)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[
+                            TextMessage(text=f"開始成功\n{json.dumps(res,indent=2)}", quick_reply=get_quick_reply_menu())
+                        ]
+                    )
                 )
-            )
+                update_user(user_id, {"current_activity": None})
+            except Exception as e:
+                app.logger.error(e)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[
+                            TextMessage(text=f"開始失敗\n{str(e)}", quick_reply=get_quick_reply_menu())
+                        ]
+                    )
+                )
             return
 
         # 取消開始時間追蹤
@@ -382,12 +393,12 @@ def handle_message(event):
                     )
                 )
                 return
-            kimai_stop_timesheet(user, current_timesheet["id"])
+            res = kimai_stop_timesheet(user, current_timesheet["id"])
             line_bot_api.reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text="停止成功", quick_reply=get_quick_reply_menu())
+                        TextMessage(text=f"停止成功\n{json.dumps(res,indent=2)}", quick_reply=get_quick_reply_menu())
                     ]
                 )
             )
@@ -413,7 +424,7 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text=f"專案:{project_name}\n活動:{activity_name}")
+                        TextMessage(text=f"專案:{project_name}\n活動:{activity_name}\n說明:{description}", quick_reply=get_quick_reply_menu())
                     ]
                 )
             )
