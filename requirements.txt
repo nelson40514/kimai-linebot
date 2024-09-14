@@ -1,3 +1,4 @@
 Werkzeug==2.3.7
 flask==2.2.2
 line-bot-sdk
+python-dotenv==1.0.0
