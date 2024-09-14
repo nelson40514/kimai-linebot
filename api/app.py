@@ -38,8 +38,8 @@ from api.db import users_collection
 
 app = Flask(__name__)
 # app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-app.logger.setLevel(logging.INFO)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# app.logger.setLevel(logging.INFO)
 
 # 設置環境變數
 channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
