@@ -19,7 +19,23 @@ app = Flask(__name__)
 # domain root
 @app.route('/')
 def home():
-    return 'Hello, World!'
+    # Return request info
+    res = "From Kimai Assistant<br>"
+    res += "Request Info:<br>"
+    res += "Host: " + request.host + "<br>"
+    res += "URL: " + request.url + "<br>"
+    res += "Base URL: " + request.base_url + "<br>"
+    res += "Remote Addr: " + request.remote_addr + "<br>"
+    res += "Method: " + request.method + "<br>"
+    res += "Path: " + request.path + "<br>"
+    res += "Full Path: " + request.full_path + "<br>"
+    res += "Query String: " + request.query_string.decode("utf-8") + "<br>"
+    res += "Headers: <br>"
+    for key, value in request.headers:
+        res += key + ": " + value + "<br>"
+    res += "Data: " + request.data.decode("utf-8") + "<br>"
+    
+    return res
 
 @app.route("/webhook", methods=['POST'])
 def callback():
