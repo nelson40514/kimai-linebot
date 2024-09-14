@@ -33,8 +33,8 @@ from linebot.v3.messaging import (
     MessageAction,
 )
 
-from kimai import kimai_api_call, kimai_get_projects, kimai_get_activities, kimai_get_current_timesheet, kimai_get_recent_timesheet, kimai_start_timesheet, kimai_stop_timesheet
-from db import users_collection
+from api.kimai import kimai_get_projects, kimai_get_activities, kimai_get_current_timesheet, kimai_get_recent_timesheet, kimai_start_timesheet, kimai_stop_timesheet
+from api.db import users_collection
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1)
