@@ -39,7 +39,7 @@ if channel_secret is None or channel_access_token is None:
     # sys.exit(1)
 
 # 初始化 LineBot
-handler = WebhookHandler(channel_secret)
+line_handler = WebhookHandler(channel_secret)
 line_bot_api = LineBotApi(channel_access_token)
 # configuration = Configuration(
 #     access_token=channel_access_token
@@ -77,13 +77,13 @@ def callback():
     app.logger.info("Request body: " + body)
     # handle webhook body
     try:
-        handler.handle(body, signature)
+        line_handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400)
     return 'OK'
 
 
-@handler.add(MessageEvent, message=TextMessage)
+@line_handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     time.sleep(1)
     # with ApiClient(configuration) as api_client:
