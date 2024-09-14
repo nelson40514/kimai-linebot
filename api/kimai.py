@@ -22,24 +22,24 @@ def kimai_api_call(method, endpoint, user, param=None, json=None):
     return response.json()
 
 # 獲取所有專案
-def get_projects(user):
+def kimai_get_projects(user):
     response = kimai_api_call("GET", "projects", user)
     return response
 
 # 獲取所有活動
-def get_activities(user, project_id):
+def kimai_get_activities(user, project_id):
     response = kimai_api_call("GET", "activities", user, param={"project": project_id})
     return response
 
 # 獲取進行中的時間追蹤
-def get_current_timesheet(user):
+def kimai_get_current_timesheet(user):
     response = kimai_api_call("GET", "timesheets/active", user)
     if response:
         return response[0]
     return None
 
 # 獲取最近n筆時間追蹤
-def get_recent_timesheet(user, n):
+def kimai_get_recent_timesheet(user, n):
     response = kimai_api_call("GET", "timesheets/recent", user, param={"size": n})
     return response
 
@@ -49,7 +49,7 @@ def get_user_info(user):
     return response
 
 # 開始時間追蹤
-def start_timesheet(user, project_id, activity_id, description):
+def kimai_start_timesheet(user, project_id, activity_id, description):
     params = {
         "begin": datetime.now(TZ).isoformat(),
         "project": project_id,
@@ -68,7 +68,7 @@ def start_timesheet(user, project_id, activity_id, description):
     return response
 
 # 停止時間追蹤
-def stop_timesheet(user, timesheet_id):
+def kimai_stop_timesheet(user, timesheet_id):
     current_activity = user.get("current_activity")
     if not current_activity:
         return None

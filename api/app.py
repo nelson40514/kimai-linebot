@@ -33,7 +33,7 @@ from linebot.v3.messaging import (
     MessageAction,
 )
 
-import kimai
+from kimai import kimai_api_call, kimai_get_projects, kimai_get_activities, kimai_get_current_timesheet, kimai_get_recent_timesheet, kimai_start_timesheet, kimai_stop_timesheet
 from db import users_collection
 
 app = Flask(__name__)
@@ -174,7 +174,7 @@ def handle_message(event):
 
         # 開始時間追蹤(選擇專案)
         if text == "/start":
-            projects = kimai.get_projects(user)
+            projects = kimai_get_projects(user)
             if not projects:
                 line_bot_api.reply_message(
                     ReplyMessageRequest(
@@ -207,7 +207,7 @@ def handle_message(event):
             # 檢查是否有選擇專案
             if len(text.split(" ")) < 3:
                 # 沒有選擇專案，重新顯示專案列表
-                projects = kimai.get_projects(user)
+                projects = kimai_get_projects(user)
                 if not projects:
                     line_bot_api.reply_message(
                         ReplyMessageRequest(
@@ -228,7 +228,7 @@ def handle_message(event):
                 return
             project_id = int(text.split(" ")[1])
             project_name = text.split(" ")[2] + " " + text.split(" ")[3] if len(text.split(" ")) > 3 else text.split(" ")[2]
-            activities = kimai.get_activities(user, project_id)
+            activities = kimai_get_activities(user, project_id)
             if not activities:
                 line_bot_api.reply_message(
                     ReplyMessageRequest(
@@ -263,7 +263,7 @@ def handle_message(event):
                 # 沒有選擇活動，重新顯示活動列表
                 project_id = int(text.split(" ")[1])
                 project_name = text.split(" ")[2] + " " + text.split(" ")[3] if len(text.split(" ")) > 3 else text.split(" ")[2]
-                activities = kimai.get_activities(user, project_id)
+                activities = kimai_get_activities(user, project_id)
                 if not activities:
                     line_bot_api.reply_message(
                         ReplyMessageRequest(
@@ -337,7 +337,7 @@ def handle_message(event):
             activity = user["current_activity"]["activity"]
             description = user["current_activity"]["description"]
             update_user(user_id, {"current_activity": None})
-            res = kimai.start_timesheet(user, project["id"], activity["id"], description)
+            res = kimai_start_timesheet(user, project["id"], activity["id"], description)
             line_bot_api.reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
@@ -363,7 +363,7 @@ def handle_message(event):
 
         # 停止時間追蹤
         if text == "/stop":
-            current_timesheet = kimai.get_current_timesheet(user)
+            current_timesheet = kimai_get_current_timesheet(user)
             if not current_timesheet:
                 line_bot_api.reply_message(
                     ReplyMessageRequest(
@@ -374,7 +374,7 @@ def handle_message(event):
                     )
                 )
                 return
-            kimai.stop_timesheet(user, current_timesheet["id"])
+            kimai_stop_timesheet(user, current_timesheet["id"])
             line_bot_api.reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
@@ -387,7 +387,7 @@ def handle_message(event):
 
         # 查看狀態
         if text == "/status":
-            current_timesheet = kimai.get_current_timesheet(user)
+            current_timesheet = kimai_get_current_timesheet(user)
             if not current_timesheet:
                 line_bot_api.reply_message(
                     ReplyMessageRequest(
@@ -416,7 +416,7 @@ def handle_message(event):
             n = 5
             if len(text.split(" ")) > 1:
                 n = int(text.split(" ")[1]) + 1
-            recent_timesheet = kimai.get_recent_timesheet(user, n)
+            recent_timesheet = kimai_get_recent_timesheet(user, n)
             if not recent_timesheet:
                 line_bot_api.reply_message(
                     ReplyMessageRequest(
