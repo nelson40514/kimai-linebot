@@ -106,13 +106,13 @@ def get_quick_reply_menu():
     quick_reply = QuickReply(
         items=[
             QuickReplyItem(
+                action=MessageAction(label="查看狀態", text="/status")
+            ),
+            QuickReplyItem(
                 action=MessageAction(label="開始時間追蹤", text="/start")
             ),
             QuickReplyItem(
                 action=MessageAction(label="停止時間追蹤", text="/stop")
-            ),
-            QuickReplyItem(
-                action=MessageAction(label="查看狀態", text="/status")
             ),
             QuickReplyItem(
                 action=MessageAction(label="查看最近時間追蹤", text="/recent 5")
@@ -346,11 +346,13 @@ def handle_message(event):
             description = user["current_activity"]["description"]
             try:
                 res = kimai_start_timesheet(user, project["id"], activity["id"], description)
+                startTime = datetime.strptime(res["begin"], "%Y-%m-%dT%H:%M:%S%z")
+                confirm_message = f"開始成功\n專案:{project['name']}\n活動:{activity['name']}\n描述:{description}\n從{startTime.strftime('%m/%d %H:%M')}開始"
                 line_bot_api.reply_message(
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text=f"開始成功\n{json.dumps(res,indent=2)}", quick_reply=get_quick_reply_menu())
+                            TextMessage(text=confirm_message, quick_reply=get_quick_reply_menu())
                         ]
                     )
                 )
@@ -394,11 +396,19 @@ def handle_message(event):
                 )
                 return
             res = kimai_stop_timesheet(user, current_timesheet["id"])
+            project_name = current_timesheet["project"]["name"]
+            activity_name = current_timesheet["activity"]["name"]
+            description = current_timesheet["description"]
+            startTime = datetime.strptime(current_timesheet["begin"], "%Y-%m-%dT%H:%M:%S%z")
+            endTime = datetime.strptime(res["end"], "%Y-%m-%dT%H:%M:%S%z")
+            duration = res["duration"]
+            stop_message = f"停止成功\n專案:{project_name}\n活動:{activity_name}\n描述:{description}\n從{startTime.strftime('%m/%d %H:%M')}到{endTime.strftime('%m/%d %H:%M')}\n總共{duration // 60}分鐘"
+
             line_bot_api.reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text=f"停止成功\n{json.dumps(res,indent=2)}", quick_reply=get_quick_reply_menu())
+                        TextMessage(text=stop_message, quick_reply=get_quick_reply_menu())
                     ]
                 )
             )
@@ -420,11 +430,23 @@ def handle_message(event):
             project_name = current_timesheet["project"]["name"]
             activity_name = current_timesheet["activity"]["name"]
             description = current_timesheet["description"]
+
+            # 使用現在時間和開始時間計算已經累積的時間
+            startTime = datetime.strptime(current_timesheet["begin"], "%Y-%m-%dT%H:%M:%S%z")
+            current_time = datetime.now()
+            duration = datetime.timestamp(current_time) - datetime.timestamp(startTime)
+
+            # 專案:xxx
+            # 活動:xxx
+            # 說明:xxx
+            # 從xxx開始(mm/dd HH:MM)
+            # 已累積xxxmins
+            status_message = f"專案:{project_name}\n活動:{activity_name}\n說明:{description}\n自 {startTime.strftime('%m/%d %H:%M')} 開始\n已累積 {duration // 60} mins"
             line_bot_api.reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text=f"專案:{project_name}\n活動:{activity_name}\n說明:{description}", quick_reply=get_quick_reply_menu())
+                        TextMessage(text=status_message, quick_reply=get_quick_reply_menu())
                     ]
                 )
             )
