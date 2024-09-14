@@ -5,4 +5,3 @@ Flask
 pytz
 line-bot-sdk
 requests
-pydantic
