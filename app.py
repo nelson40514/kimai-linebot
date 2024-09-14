@@ -51,7 +51,7 @@ KIMAI_BASE_URL = os.getenv('KIMAI_BASE_URL')
 
 
 # 初始化 LineBot
-handler = WebhookHandler(channel_secret)
+lineHandler = WebhookHandler(channel_secret)
 
 configuration = Configuration(
     access_token=channel_access_token
@@ -194,7 +194,7 @@ def get_quick_reply_menu():
     )
     return quick_reply
 
-@handler.add(MessageEvent, message=TextMessageContent)
+@lineHandler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
     text = event.message.text
     user_id = event.source.user_id
@@ -579,7 +579,7 @@ def callback():
 
     # handle webhook body
     try:
-        handler.handle(body, signature)
+        lineHandler.handle(body, signature)
     except ApiException as e:
         app.logger.warn("Got exception from LINE Messaging API: %s\n" % e.body)
     except InvalidSignatureError:
