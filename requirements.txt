@@ -1,6 +1,3 @@
+Werkzeug==2.3.7
 Flask==2.2.2
-werkzeug==2.2.2
-pymongo
-pytz
 line-bot-sdk
-requests
