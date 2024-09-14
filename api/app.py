@@ -7,7 +7,7 @@ import logging
 from argparse import ArgumentParser
 from datetime import datetime
 from flask import Flask, request, abort
-from werkzeug.middleware.proxy_fix import ProxyFix
+# from werkzeug.middleware.proxy_fix import ProxyFix
 
 from linebot.v3 import (
     WebhookHandler
@@ -37,7 +37,7 @@ from api.kimai import kimai_get_projects, kimai_get_activities, kimai_get_curren
 from api.db import users_collection
 
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1)
+# app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 app.logger.setLevel(logging.INFO)
 
