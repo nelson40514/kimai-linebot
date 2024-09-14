@@ -7,6 +7,30 @@ import os
 import time
 from dotenv import load_dotenv
 
+from linebot.v3 import (
+    WebhookHandler
+)
+from linebot.v3.exceptions import (
+    InvalidSignatureError
+)
+from linebot.v3.webhooks import (
+    MessageEvent,
+    TextMessageContent,
+)
+from linebot.v3.messaging import (
+    Configuration,
+    ApiClient,
+    MessagingApi,
+    ConfirmTemplate,
+    TextMessage,
+    TemplateMessage,
+    ReplyMessageRequest,
+    ApiException,
+    QuickReply,
+    QuickReplyItem,
+    MessageAction,
+)
+
 # 載入.env檔案中的變數
 load_dotenv()
 
