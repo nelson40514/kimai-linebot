@@ -40,10 +40,10 @@ if channel_secret is None or channel_access_token is None:
 
 # 初始化 LineBot
 handler = WebhookHandler(channel_secret)
-
-configuration = Configuration(
-    access_token=channel_access_token
-)
+line_bot_api = LineBotApi(channel_access_token)
+# configuration = Configuration(
+#     access_token=channel_access_token
+# )
 
 app = Flask(__name__)
 
@@ -86,12 +86,12 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     time.sleep(1)
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=event.message.text)
-        )
+    # with ApiClient(configuration) as api_client:
+    #     line_bot_api = MessagingApi(api_client)
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=event.message.text)
+    )
 
 
 if __name__ == "__main__":
