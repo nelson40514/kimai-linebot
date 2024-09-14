@@ -1,7 +1,6 @@
-# requirements.txt
-Werkzeug
+Flask==2.2.2
+werkzeug==2.2.2
 pymongo
-Flask
 pytz
 line-bot-sdk
 requests
