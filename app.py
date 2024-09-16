@@ -22,6 +22,8 @@ from linebot.v3.messaging import (
     ApiClient,
     MessagingApi,
     ConfirmTemplate,
+    CarouselTemplate,
+    CarouselColumn,
     TextMessage,
     TemplateMessage,
     ReplyMessageRequest,
@@ -454,9 +456,7 @@ def handle_message(event):
 
         # 查看最近時間追蹤
         if text.startswith("/recent"):
-            n = 5
-            if len(text.split(" ")) > 1:
-                n = int(text.split(" ")[1]) + 1
+            n = int(text.split(" ")[1]) if len(text.split(" ")) > 1 else 5
             recent_timesheet = kimai_get_recent_timesheet(user, n)
             if not recent_timesheet:
                 line_bot_api.reply_message(
@@ -470,19 +470,53 @@ def handle_message(event):
                 return
             recent_timesheet_list = []
             for tracking in recent_timesheet:
-                project = tracking.get("project")
-                project_name = project.get("name") if project else ""
-                activity = tracking.get("activity")
-                activity_name = activity.get("name") if activity else ""
-                description = tracking.get("description")
-                duration = tracking.get("duration")
-                recent_timesheet_list.append(f"{project_name}:{activity_name}\n{description}\nDuration:{duration/60} mins")
-            recent_timesheet_list = "\n\n".join(recent_timesheet_list)
+                project_id = tracking.get("project", "")
+                project_name = "".join([project["name"] for project in kimai_get_projects(user) if project["id"] == project_id])
+                activity_id = tracking.get("activity", "")
+                activity_name = "".join([activity["name"] for activity in kimai_get_activities(user, project_id) if activity["id"] == activity_id])
+                description = tracking.get("description", "無描述") if tracking.get("description") else "無描述"
+                duration = tracking.get("duration", 0)
+                begin = tracking.get("begin", "")
+                end = tracking.get("end", "")
+                startDate = datetime.strptime(begin, "%Y-%m-%dT%H:%M:%S%z")
+                endDate = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S%z")
+                timesheet = {
+                    "project":{
+                        "id": project_id,
+                        "name": project_name
+                    },
+                    "activity":{
+                        "id": activity_id,
+                        "name": activity_name
+                    },
+                    "description": description,
+                    "duration": duration,
+                    "startDate": startDate.strftime("%m/%d %H:%M"),
+                    "endDate": endDate.strftime("%H:%M")
+                }
+                recent_timesheet_list.append(timesheet)
             line_bot_api.reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text="最近時間追蹤記錄:\n" + recent_timesheet_list, quick_reply=get_quick_reply_menu())
+                        # TextMessage(text="最近時間追蹤記錄:\n" + recent_timesheet_list, quick_reply=get_quick_reply_menu())
+                        # Change to Carousel
+                        TemplateMessage(
+                            altText="最近時間追蹤記錄",
+                            template=CarouselTemplate(
+                                columns=[
+                                    CarouselColumn(
+                                        title=f"{timesheet['project']['name']} \n{timesheet['activity']['name']}",
+                                        text=f"{timesheet['description'][:59]}",
+                                        actions=[
+                                            MessageAction(label=f"{timesheet['startDate']} ~ {timesheet['endDate']}", text="/status"),
+                                            MessageAction(label=f"紀錄時間:{timesheet['duration'] // 60}分鐘", text="/status"),
+                                            MessageAction(label="複製專案與活動", text=f"/start_activity {timesheet['project']['id']} {timesheet['project']['name']} {timesheet['activity']['id']} {timesheet['activity']['name']}"),
+                                        ]
+                                    ) for timesheet in recent_timesheet_list
+                                ]
+                            )
+                        )
                     ]
                 )
             )

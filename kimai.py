@@ -33,8 +33,11 @@ def kimai_get_projects(user):
     return response
 
 # 獲取所有活動
-def kimai_get_activities(user, project_id):
-    response = kimai_api_call("GET", "activities", user, param={"project": project_id})
+def kimai_get_activities(user, project_id = None):
+    if project_id is None:
+        response = kimai_api_call("GET", "activities", user)
+    else:
+        response = kimai_api_call("GET", "activities", user, param={"project": project_id})
     return response
 
 # 獲取進行中的時間追蹤
@@ -46,7 +49,7 @@ def kimai_get_current_timesheet(user):
 
 # 獲取最近n筆時間追蹤
 def kimai_get_recent_timesheet(user, n):
-    response = kimai_api_call("GET", "timesheets/recent", user, param={"size": n})
+    response = kimai_api_call("GET", "timesheets", user, param={"size": n})
     return response
 
 # 獲取user資訊
