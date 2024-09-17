@@ -143,7 +143,9 @@ def handle_message(event):
                         reply_token=event.reply_token,
                         messages=[
                             TextMessage(
-                                text="請先設置您的Kimai API Token，格式為 /set_token <token>"
+                                text="請先設置您的Kimai API Token，格式為 /set_token <token>",
+                                quote_token=event.message.quote_token,
+                                quickReply=get_quick_reply_menu(),
                             )
                         ]
                     )
@@ -155,7 +157,11 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text="設置成功", quick_reply=get_quick_reply_menu())
+                        TextMessage(
+                            text="設置成功",
+                            quote_token=event.message.quote_token,
+                            quick_reply=get_quick_reply_menu()
+                        )
                     ]
                 )
             )
@@ -169,6 +175,7 @@ def handle_message(event):
                     messages=[
                         TextMessage(
                             text="請先設置您的Kimai API Token，格式為 /set_token <token>",
+                            quote_token=event.message.quote_token,
                             quick_reply=QuickReply(
                                 items=[
                                     QuickReplyItem(
@@ -190,7 +197,11 @@ def handle_message(event):
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text="您尚未設置任何專案", quick_reply=get_quick_reply_menu())
+                            TextMessage(
+                                text="您尚未設置任何專案",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu(),
+                            )
                         ]
                     )
                 )
@@ -206,7 +217,11 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text="請選擇專案", quick_reply=quick_reply)
+                        TextMessage(
+                            text="請選擇專案",
+                            quote_token=event.message.quote_token,
+                            quick_reply=quick_reply
+                        )
                     ]
                 )
             )
@@ -223,7 +238,11 @@ def handle_message(event):
                         ReplyMessageRequest(
                             reply_token=event.reply_token,
                             messages=[
-                                TextMessage(text="您尚未設置任何專案", quick_reply=get_quick_reply_menu())
+                                TextMessage(
+                                    text="您尚未設置任何專案",
+                                    quote_token=event.message.quote_token,
+                                    quick_reply=get_quick_reply_menu()
+                                )
                             ]
                         )
                     )
@@ -244,7 +263,11 @@ def handle_message(event):
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text="此專案下無任何活動", quick_reply=get_quick_reply_menu())
+                            TextMessage(
+                                text="此專案下無任何活動",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu()
+                            )
                         ]
                     )
                 )
@@ -260,7 +283,11 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text="請選擇活動", quick_reply=quick_reply)
+                        TextMessage(
+                            text="請選擇活動",
+                            quote_token=event.message.quote_token,
+                            quick_reply=quick_reply
+                        )
                     ]
                 )
             )
@@ -279,7 +306,11 @@ def handle_message(event):
                         ReplyMessageRequest(
                             reply_token=event.reply_token,
                             messages=[
-                                TextMessage(text="此專案下無任何活動", quick_reply=get_quick_reply_menu())
+                                TextMessage(
+                                    text="此專案下無任何活動",
+                                    quote_token=event.message.quote_token,
+                                    quick_reply=get_quick_reply_menu()
+                                )
                             ]
                         )
                     )
@@ -295,7 +326,11 @@ def handle_message(event):
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text="請選擇活動", quick_reply=quick_reply)
+                            TextMessage(
+                                text="請選擇活動",
+                                quote_token=event.message.quote_token,
+                                quick_reply=quick_reply
+                            )
                         ]
                     )
                 )
@@ -325,7 +360,10 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text="請輸入描述")
+                        TextMessage(
+                            text="請輸入描述",
+                            quote_token=event.message.quote_token,
+                        )
                     ]
                 )
             )
@@ -338,7 +376,11 @@ def handle_message(event):
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text="您尚未選擇任何專案或活動", quick_reply=get_quick_reply_menu())
+                            TextMessage(
+                                text="您尚未選擇任何專案或活動",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu(),
+                            )
                         ]
                     )
                 )
@@ -354,7 +396,11 @@ def handle_message(event):
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text=confirm_message, quick_reply=get_quick_reply_menu())
+                            TextMessage(
+                                text=confirm_message,
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu()
+                            )
                         ]
                     )
                 )
@@ -365,7 +411,11 @@ def handle_message(event):
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text=f"開始失敗\n{str(e)}", quick_reply=get_quick_reply_menu())
+                            TextMessage(
+                                text=f"開始失敗\n{str(e)}",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu()
+                            )
                         ]
                     )
                 )
@@ -378,7 +428,11 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text="取消成功", quick_reply=get_quick_reply_menu())
+                        TextMessage(
+                            text="取消成功",
+                            quote_token=event.message.quote_token,
+                            quick_reply=get_quick_reply_menu()
+                        )
                     ]
                 )
             )
@@ -392,7 +446,11 @@ def handle_message(event):
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text="您尚未開始任何活動", quick_reply=get_quick_reply_menu())
+                            TextMessage(
+                                text="您尚未開始任何活動",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu(),
+                            )
                         ]
                     )
                 )
@@ -410,7 +468,11 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text=stop_message, quick_reply=get_quick_reply_menu())
+                        TextMessage(
+                            text=stop_message,
+                            quote_token=event.message.quote_token,
+                            quick_reply=get_quick_reply_menu(),
+                        )
                     ]
                 )
             )
@@ -424,7 +486,11 @@ def handle_message(event):
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text="您尚未開始任何活動", quick_reply=get_quick_reply_menu())
+                            TextMessage(
+                                text="您尚未開始任何活動",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu(),
+                            )
                         ]
                     )
                 )
@@ -448,7 +514,11 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        TextMessage(text=status_message, quick_reply=get_quick_reply_menu())
+                        TextMessage(
+                            text=status_message,
+                            quote_token=event.message.quote_token,
+                            quick_reply=get_quick_reply_menu(),
+                        )
                     ]
                 )
             )
@@ -463,7 +533,11 @@ def handle_message(event):
                     ReplyMessageRequest(
                         reply_token=event.reply_token,
                         messages=[
-                            TextMessage(text="您尚未有任何時間追蹤記錄", quick_reply=get_quick_reply_menu())
+                            TextMessage(
+                                text="您尚未有任何時間追蹤記錄",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu(),
+                            )
                         ]
                     )
                 )
@@ -499,7 +573,6 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[
-                        # TextMessage(text="最近時間追蹤記錄:\n" + recent_timesheet_list, quick_reply=get_quick_reply_menu())
                         # Change to Carousel
                         TemplateMessage(
                             altText="最近時間追蹤記錄",
@@ -559,7 +632,11 @@ def handle_message(event):
             ReplyMessageRequest(
                 reply_token=event.reply_token,
                 messages=[
-                    TextMessage(text="請選擇操作", quick_reply=get_quick_reply_menu())
+                    TextMessage(
+                        text="請選擇操作",
+                        quote_token=event.message.quote_token,
+                        quick_reply=get_quick_reply_menu()
+                    )
                 ]
             )
         )
