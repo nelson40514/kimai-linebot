@@ -85,6 +85,9 @@ def index():
     
     return res
 
+@app.route("/loaderio-05a53ce781778efb8b4a1605c3741e70")
+def loaderio():
+    return "loaderio-05a53ce781778efb8b4a1605c3741e70"
 
 def get_or_create_user(line_user_id):
     user = users_collection.find_one({"line_user_id": line_user_id})
