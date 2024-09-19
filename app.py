@@ -85,7 +85,7 @@ def index():
     
     return res
 
-@app.route("/loaderio-05a53ce781778efb8b4a1605c3741e70")
+@app.route("/loaderio-05a53ce781778efb8b4a1605c3741e70/")
 def loaderio():
     return "loaderio-05a53ce781778efb8b4a1605c3741e70"
 
