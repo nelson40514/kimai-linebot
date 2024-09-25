@@ -18,6 +18,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   var_value=$(echo "$line" | cut -d= -f2-)
 
   # 匯出變數到環境中
+  echo "$var_name"="$var_value"
   export "$var_name"="$var_value"
 done < .env
 

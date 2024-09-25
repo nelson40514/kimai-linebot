@@ -120,7 +120,7 @@ def get_quick_reply_menu():
                 action=MessageAction(label="停止時間追蹤", text="/stop")
             ),
             QuickReplyItem(
-                action=MessageAction(label="查看最近時間追蹤", text="/recent 5")
+                action=MessageAction(label="查看最近時間追蹤", text="/recent")
             ),
             QuickReplyItem(
                 action=MessageAction(label="設置Kimai API Token 用法", text="/set_token")
@@ -553,10 +553,12 @@ def handle_message(event):
                 activity_name = "".join([activity["name"] for activity in kimai_get_activities(user, project_id) if activity["id"] == activity_id])
                 description = tracking.get("description", "無描述") if tracking.get("description") else "無描述"
                 duration = tracking.get("duration", 0)
-                begin = tracking.get("begin", "")
-                end = tracking.get("end", "")
-                startDate = datetime.strptime(begin, "%Y-%m-%dT%H:%M:%S%z")
-                endDate = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S%z")
+                # begin = tracking.get("begin", "") if tracking.get("begin") else ""
+                # end = tracking.get("end", "") if tracking.get("end") else ""
+                # startDate = datetime.strptime(begin, "%Y-%m-%dT%H:%M:%S%z")
+                # endDate = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S%z")
+                startDate = datetime.strptime(tracking.get("begin", ""), "%Y-%m-%dT%H:%M:%S%z").strftime("%m/%d %H:%M") if tracking.get("begin") else ""
+                endDate = datetime.strptime(tracking.get("end", ""), "%Y-%m-%dT%H:%M:%S%z").strftime("%H:%M") if tracking.get("end") else "Now"
                 timesheet = {
                     "project":{
                         "id": project_id,
@@ -568,8 +570,8 @@ def handle_message(event):
                     },
                     "description": description,
                     "duration": duration,
-                    "startDate": startDate.strftime("%m/%d %H:%M"),
-                    "endDate": endDate.strftime("%H:%M")
+                    "startDate": startDate,
+                    "endDate": endDate
                 }
                 recent_timesheet_list.append(timesheet)
             line_bot_api.reply_message(
@@ -591,7 +593,8 @@ def handle_message(event):
                                         ]
                                     ) for timesheet in recent_timesheet_list
                                 ]
-                            )
+                            ),
+                        quick_reply=get_quick_reply_menu()
                         )
                     ]
                 )
