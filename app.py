@@ -36,7 +36,9 @@ from linebot.v3.messaging import (
 
 from db import users_collection
 from kimai import (
+    kimai_get_project,
     kimai_get_projects,
+    kimai_get_activity,
     kimai_get_activities,
     kimai_get_current_timesheet,
     kimai_get_recent_timesheet,
@@ -106,6 +108,138 @@ def update_user(line_user_id, update_data):
     update_data["updated_at"] = datetime.now()
     res = users_collection.update_one({"line_user_id": line_user_id}, {"$set": update_data})
 
+def start(event, user, line_bot_api):
+    projects = kimai_get_projects(user)
+    if not projects:
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[
+                    TextMessage(
+                        text="您尚未設置任何專案",
+                        quote_token=event.message.quote_token,
+                        quick_reply=get_quick_reply_menu(),
+                    )
+                ]
+            )
+        )
+        return
+    quick_reply = QuickReply(
+        items=[
+            QuickReplyItem(
+                action=MessageAction(label=project["name"], text=f"/start_project {project['id']}")
+            ) for project in projects[:13]
+        ]
+    )
+    line_bot_api.reply_message(
+        ReplyMessageRequest(
+            reply_token=event.reply_token,
+            messages=[
+                TextMessage(
+                    text="請選擇專案",
+                    quote_token=event.message.quote_token,
+                    quick_reply=quick_reply
+                )
+            ]
+        )
+    )
+
+def start_project(event, user, line_bot_api, project_id):
+    print(project_id)
+    project = kimai_get_project(user, project_id)
+    if not project:
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[
+                    TextMessage(
+                        text="找不到此專案",
+                        quote_token=event.message.quote_token,
+                        quick_reply=get_quick_reply_menu()
+                    )
+                ]
+            )
+        )
+        return
+    project_name = project.get("name", "")
+    
+    activities = kimai_get_activities(user)
+    if not activities:
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[
+                    TextMessage(
+                        text="此專案下無任何活動",
+                        quote_token=event.message.quote_token,
+                        quick_reply=get_quick_reply_menu()
+                    )
+                ]
+            )
+        )
+        return
+    quick_reply = QuickReply(
+        items=[
+            QuickReplyItem(
+                action=MessageAction(label=activity["name"], text=f"/start_activity {project_id} {activity['id']} ")
+            ) for activity in activities[:13]
+        ]
+    )
+    line_bot_api.reply_message(
+        ReplyMessageRequest(
+            reply_token=event.reply_token,
+            messages=[
+                TextMessage(
+                    text=f"Project: {project_name}\n請選擇活動",
+                    quote_token=event.message.quote_token,
+                    quick_reply=quick_reply
+                )
+            ]
+        )
+    )
+
+def start_activity(event, user, line_bot_api, project_id, activity_id):
+    project = kimai_get_project(user, project_id)
+    activity = kimai_get_activity(user, activity_id)
+    if not project or not activity:
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[
+                    TextMessage(
+                        text="找不到此專案或活動",
+                        quote_token=event.message.quote_token,
+                        quick_reply=get_quick_reply_menu()
+                    )
+                ]
+            )
+        )
+        return
+    project_name = project.get("name", "")
+    activity_name = activity.get("name", "")
+    update_user(user["line_user_id"], {
+        "current_activity": {
+            "project": {
+                "id": project_id,
+                "name": project_name
+            },
+            "activity": {
+                "id": activity_id,
+                "name": activity_name
+            }
+        }
+    })
+    line_bot_api.reply_message(
+        ReplyMessageRequest(
+            reply_token=event.reply_token,
+            messages=[
+                TextMessage(
+                    text=f"Project: {project_name}\nActivity: {activity_name}\n請輸入描述",
+                    quote_token=event.message.quote_token,
+                )
+            ]
+        )
+    )
 
 def get_quick_reply_menu():
     quick_reply = QuickReply(
@@ -194,182 +328,32 @@ def handle_message(event):
 
         # 開始時間追蹤(選擇專案)
         if text == "/start":
-            projects = kimai_get_projects(user)
-            if not projects:
-                line_bot_api.reply_message(
-                    ReplyMessageRequest(
-                        reply_token=event.reply_token,
-                        messages=[
-                            TextMessage(
-                                text="您尚未設置任何專案",
-                                quote_token=event.message.quote_token,
-                                quick_reply=get_quick_reply_menu(),
-                            )
-                        ]
-                    )
-                )
-                return
-            quick_reply = QuickReply(
-                items=[
-                    QuickReplyItem(
-                        action=MessageAction(label=project["name"], text=f"/start_project {project['id']} {project['name']}")
-                    ) for project in projects[:13]
-                ]
-            )
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[
-                        TextMessage(
-                            text="請選擇專案",
-                            quote_token=event.message.quote_token,
-                            quick_reply=quick_reply
-                        )
-                    ]
-                )
-            )
+            start(event, user, line_bot_api)
             return
 
         # 選完專案，選擇活動
         if text.startswith("/start_project"):
             # 檢查是否有選擇專案
-            if len(text.split(" ")) < 3:
+            if len(text.split(" ")) < 2:
                 # 沒有選擇專案，重新顯示專案列表
-                projects = kimai_get_projects(user)
-                if not projects:
-                    line_bot_api.reply_message(
-                        ReplyMessageRequest(
-                            reply_token=event.reply_token,
-                            messages=[
-                                TextMessage(
-                                    text="您尚未設置任何專案",
-                                    quote_token=event.message.quote_token,
-                                    quick_reply=get_quick_reply_menu()
-                                )
-                            ]
-                        )
-                    )
-                    return
-                quick_reply = QuickReply(
-                    items=[
-                        QuickReplyItem(
-                            action=MessageAction(label=project["name"], text=f"/start_project {project['id']} {project['name']}")
-                        ) for project in projects[:13]
-                    ]
-                )
+                start(event, user, line_bot_api)
                 return
             project_id = int(text.split(" ")[1])
-            project_name = text.split(" ")[2] + " " + text.split(" ")[3] if len(text.split(" ")) > 3 else text.split(" ")[2]
-            activities = kimai_get_activities(user, project_id)
-            if not activities:
-                line_bot_api.reply_message(
-                    ReplyMessageRequest(
-                        reply_token=event.reply_token,
-                        messages=[
-                            TextMessage(
-                                text="此專案下無任何活動",
-                                quote_token=event.message.quote_token,
-                                quick_reply=get_quick_reply_menu()
-                            )
-                        ]
-                    )
-                )
-                return
-            quick_reply = QuickReply(
-                items=[
-                    QuickReplyItem(
-                        action=MessageAction(label=activity["name"], text=f"/start_activity {project_id} {project_name} {activity['id']} {activity['name']}")
-                    ) for activity in activities[:13]
-                ]
-            )
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[
-                        TextMessage(
-                            text="請選擇活動",
-                            quote_token=event.message.quote_token,
-                            quick_reply=quick_reply
-                        )
-                    ]
-                )
-            )
+
+            start_project(event, user, line_bot_api, project_id)
             return
 
         # 選完活動，輸入描述
         if text.startswith("/start_activity"):
             # 檢查是否有選擇活動
-            if len(text.split(" ")) < 5:
+            if len(text.split(" ")) < 3:
                 # 沒有選擇活動，重新顯示活動列表
                 project_id = int(text.split(" ")[1])
-                project_name = text.split(" ")[2] + " " + text.split(" ")[3] if len(text.split(" ")) > 3 else text.split(" ")[2]
-                activities = kimai_get_activities(user, project_id)
-                if not activities:
-                    line_bot_api.reply_message(
-                        ReplyMessageRequest(
-                            reply_token=event.reply_token,
-                            messages=[
-                                TextMessage(
-                                    text="此專案下無任何活動",
-                                    quote_token=event.message.quote_token,
-                                    quick_reply=get_quick_reply_menu()
-                                )
-                            ]
-                        )
-                    )
-                    return
-                quick_reply = QuickReply(
-                    items=[
-                        QuickReplyItem(
-                            action=MessageAction(label=activity["name"], text=f"/start_activity {project_id} {project_name} {activity['id']} {activity['name']}")
-                        ) for activity in activities[:13]
-                    ]
-                )
-                line_bot_api.reply_message(
-                    ReplyMessageRequest(
-                        reply_token=event.reply_token,
-                        messages=[
-                            TextMessage(
-                                text="請選擇活動",
-                                quote_token=event.message.quote_token,
-                                quick_reply=quick_reply
-                            )
-                        ]
-                    )
-                )
+                start_project(event, user, line_bot_api, project_id)
                 return
             project_id = int(text.split(" ")[1])
-            if type(text.split(" ")[3]) == int:
-                project_name = text.split(" ")[2] 
-                activity_id = int(text.split(" ")[3])
-                activity_name = text.split(" ")[4]
-            else:
-                project_name = text.split(" ")[2] + " " + text.split(" ")[3]
-                activity_id = int(text.split(" ")[4])
-                activity_name = text.split(" ")[5]
-            update_user(user_id, {
-                "current_activity": {
-                    "project": {
-                        "id": project_id,
-                        "name": project_name
-                    },
-                    "activity": {
-                        "id": activity_id,
-                        "name": activity_name
-                    }
-                }
-            })
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[
-                        TextMessage(
-                            text="請輸入描述",
-                            quote_token=event.message.quote_token,
-                        )
-                    ]
-                )
-            )
+            activity_id = int(text.split(" ")[2])
+            start_activity(event, user, line_bot_api, project_id, activity_id)
             return
 
         # 確認開始時間追蹤
@@ -550,7 +534,7 @@ def handle_message(event):
                 project_id = tracking.get("project", "")
                 project_name = "".join([project["name"] for project in kimai_get_projects(user) if project["id"] == project_id])
                 activity_id = tracking.get("activity", "")
-                activity_name = "".join([activity["name"] for activity in kimai_get_activities(user, project_id) if activity["id"] == activity_id])
+                activity_name = "".join([activity["name"] for activity in kimai_get_activities(user) if activity["id"] == activity_id])
                 description = tracking.get("description", "無描述") if tracking.get("description") else "無描述"
                 duration = tracking.get("duration", 0)
                 # begin = tracking.get("begin", "") if tracking.get("begin") else ""

@@ -15,6 +15,8 @@ if KIMAI_BASE_URL is None:
 # 設置時區
 TZ = pytz.timezone('Asia/Taipei')
 
+PROJECTS = []
+ACTIVITIES = []
 
 # 呼叫 Kimai API
 def kimai_api_call(method, endpoint, user, param=None, json=None):
@@ -29,16 +31,31 @@ def kimai_api_call(method, endpoint, user, param=None, json=None):
 
 # 獲取所有專案
 def kimai_get_projects(user):
-    response = kimai_api_call("GET", "projects", user)
-    return response
+    global PROJECTS
+    if not PROJECTS:
+        response = kimai_api_call("GET", "projects", user)
+        PROJECTS = response
+    return PROJECTS
+
+def kimai_get_project(user, project_id):
+    global PROJECTS
+    if not PROJECTS:
+        kimai_get_projects(user)
+    return next((project for project in PROJECTS if project['id'] == project_id), None)
 
 # 獲取所有活動
-def kimai_get_activities(user, project_id = None):
-    if project_id is None:
+def kimai_get_activities(user):
+    global ACTIVITIES
+    if not ACTIVITIES:
         response = kimai_api_call("GET", "activities", user)
-    else:
-        response = kimai_api_call("GET", "activities", user, param={"project": project_id})
-    return response
+        ACTIVITIES = response
+    return ACTIVITIES
+
+def kimai_get_activity(user, activity_id):
+    global ACTIVITIES
+    if not ACTIVITIES:
+        kimai_get_activities(user)
+    return next((activity for activity in ACTIVITIES if activity['id'] == activity_id), None)
 
 # 獲取進行中的時間追蹤
 def kimai_get_current_timesheet(user):
