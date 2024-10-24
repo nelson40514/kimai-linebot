@@ -217,18 +217,18 @@ def start_activity(event, user, line_bot_api, project_id, activity_id):
         return
     project_name = project.get("name", "")
     activity_name = activity.get("name", "")
-    update_user(user["line_user_id"], {
-        "current_activity": {
-            "project": {
-                "id": project_id,
-                "name": project_name
-            },
-            "activity": {
-                "id": activity_id,
-                "name": activity_name
-            }
-        }
-    })
+    # update_user(user["line_user_id"], {
+    #     "current_activity": {
+    #         "project": {
+    #             "id": project_id,
+    #             "name": project_name
+    #         },
+    #         "activity": {
+    #             "id": activity_id,
+    #             "name": activity_name
+    #         }
+    #     }
+    # })
     line_bot_api.reply_message(
         ReplyMessageRequest(
             reply_token=event.reply_token,
@@ -339,7 +339,6 @@ def handle_message(event):
                 start(event, user, line_bot_api)
                 return
             project_id = int(text.split(" ")[1])
-
             start_project(event, user, line_bot_api, project_id)
             return
 
@@ -354,6 +353,60 @@ def handle_message(event):
             project_id = int(text.split(" ")[1])
             activity_id = int(text.split(" ")[2])
             start_activity(event, user, line_bot_api, project_id, activity_id)
+            return
+
+        # 直接輸入描述
+        if text.startswith("/start_timesheet"):
+            # 檢查是否有選擇活動及輸入描述
+            if len(text.split(" ")) < 4:
+                if len(text.split(" ")) < 3:
+                    if len(text.split(" ")) < 2:
+                        # 沒有選擇專案，重新顯示專案列表
+                        start(event, user, line_bot_api)
+                        return
+                    project_id = int(text.split(" ")[1])
+                    start_project(event, user, line_bot_api, project_id)
+                    return
+                # 沒有選擇活動，重新顯示活動列表
+                project_id = int(text.split(" ")[1])
+                activity_id = int(text.split(" ")[2])
+                start_activity(event, user, line_bot_api, project_id, activity_id)
+                return
+            project_id = int(text.split(" ")[1])
+            activity_id = int(text.split(" ")[2])
+            description = " ".join(text.split(" ")[3:])
+            try:
+                res = kimai_start_timesheet(user, project_id, activity_id, description)
+                startTime = datetime.strptime(res["begin"], "%Y-%m-%dT%H:%M:%S%z")
+                project = kimai_get_project(user, project_id)
+                activity = kimai_get_activity(user, activity_id)
+                confirm_message = f"開始成功\n專案:{project['name']}\n活動:{activity['name']}\n描述:{description}\n從{startTime.strftime('%m/%d %H:%M')}開始"
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[
+                            TextMessage(
+                                text=confirm_message,
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu()
+                            )
+                        ]
+                    )
+                )
+            except Exception as e:
+                app.logger.error(e)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[
+                            TextMessage(
+                                text=f"開始失敗\n{str(e)}",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu()
+                            )
+                        ]
+                    )
+                )
             return
 
         # 確認開始時間追蹤
@@ -442,27 +495,43 @@ def handle_message(event):
                     )
                 )
                 return
-            res = kimai_stop_timesheet(user, current_timesheet["id"])
-            project_name = current_timesheet["project"]["name"]
-            activity_name = current_timesheet["activity"]["name"]
-            description = current_timesheet["description"]
-            startTime = datetime.strptime(current_timesheet["begin"], "%Y-%m-%dT%H:%M:%S%z")
-            endTime = datetime.strptime(res["end"], "%Y-%m-%dT%H:%M:%S%z")
-            duration = res["duration"]
-            stop_message = f"停止成功\n專案:{project_name}\n活動:{activity_name}\n描述:{description}\n從{startTime.strftime('%m/%d %H:%M')}到{endTime.strftime('%m/%d %H:%M')}\n總共{duration // 60}分鐘"
+            try:
+                app.logger.info(f"current_timesheet: {current_timesheet}")
+                res = kimai_stop_timesheet(user, current_timesheet["id"])
+                project_name = current_timesheet["project"]["name"]
+                activity_name = current_timesheet["activity"]["name"]
+                description = current_timesheet["description"]
+                startTime = datetime.strptime(current_timesheet["begin"], "%Y-%m-%dT%H:%M:%S%z")
+                endTime = datetime.strptime(res["end"], "%Y-%m-%dT%H:%M:%S%z")
+                duration = res["duration"]
+                stop_message = f"停止成功\n專案:{project_name}\n活動:{activity_name}\n描述:{description}\n從{startTime.strftime('%m/%d %H:%M')}到{endTime.strftime('%m/%d %H:%M')}\n總共{duration // 60}分鐘"
 
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[
-                        TextMessage(
-                            text=stop_message,
-                            quote_token=event.message.quote_token,
-                            quick_reply=get_quick_reply_menu(),
-                        )
-                    ]
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[
+                            TextMessage(
+                                text=stop_message,
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu(),
+                            )
+                        ]
+                    )
                 )
-            )
+            except Exception as e:
+                app.logger.error(e)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[
+                            TextMessage(
+                                text=f"停止失敗\n{str(e)}",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu(),
+                            )
+                        ]
+                    )
+                )
             return
 
         # 查看狀態
@@ -645,7 +714,7 @@ def callback():
     try:
         lineHandler.handle(body, signature)
     except ApiException as e:
-        app.logger.warn("Got exception from LINE Messaging API: %s\n" % e.body)
+        app.logger.error("Got exception from LINE Messaging API: %s\n" % e)
     except InvalidSignatureError:
         abort(400)
 
