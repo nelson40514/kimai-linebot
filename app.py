@@ -641,11 +641,9 @@ def handle_message(event):
                                         title=f"{timesheet['project']['name']} \n{timesheet['activity']['name']}",
                                         text=f"{timesheet['description'][:59]}",
                                         actions=[
-                                            # MessageAction(label=f"{timesheet['startDate']} ~ {timesheet['endDate']}", text="/status"),
                                             MessageAction(label=f"{timesheet['duration'] // 60}m {timesheet['startDate']}~{timesheet['endDate']}", text="/status"),
                                             MessageAction(label="重複專案類型", text=f"/start_activity {timesheet['project']['id']} {timesheet['activity']['id']}"),
-                                            # MessageAction(label="複製事件資料", text=f"/start_timesheet {timesheet['project']['id']} {timesheet['activity']['id']} {timesheet['description']}")
-                                            ClipboardAction(label="複製事件資料", clipboardText=f"{timesheet['project']['name']} {timesheet['activity']['name']} {timesheet['description']}")
+                                            ClipboardAction(label="複製事件資料", clipboardText=f"/start_timesheet {timesheet['project']['id']} {timesheet['activity']['id']} {timesheet['description']}")
                                         ]
                                     ) for timesheet in recent_timesheet_list
                                 ]
