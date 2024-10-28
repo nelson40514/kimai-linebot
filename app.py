@@ -31,6 +31,7 @@ from linebot.v3.messaging import (
     QuickReply,
     QuickReplyItem,
     MessageAction,
+    ClipboardAction,
 )
 
 
@@ -610,8 +611,8 @@ def handle_message(event):
                 # end = tracking.get("end", "") if tracking.get("end") else ""
                 # startDate = datetime.strptime(begin, "%Y-%m-%dT%H:%M:%S%z")
                 # endDate = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S%z")
-                startDate = datetime.strptime(tracking.get("begin", ""), "%Y-%m-%dT%H:%M:%S%z").strftime("%m/%d %H:%M") if tracking.get("begin") else ""
-                endDate = datetime.strptime(tracking.get("end", ""), "%Y-%m-%dT%H:%M:%S%z").strftime("%H:%M") if tracking.get("end") else "Now"
+                startDate = datetime.strptime(tracking.get("begin", ""), "%Y-%m-%dT%H:%M:%S%z").strftime("%m/%d %H%M") if tracking.get("begin") else ""
+                endDate = datetime.strptime(tracking.get("end", ""), "%Y-%m-%dT%H:%M:%S%z").strftime("%H%M") if tracking.get("end") else "Now"
                 timesheet = {
                     "project":{
                         "id": project_id,
@@ -640,9 +641,11 @@ def handle_message(event):
                                         title=f"{timesheet['project']['name']} \n{timesheet['activity']['name']}",
                                         text=f"{timesheet['description'][:59]}",
                                         actions=[
-                                            MessageAction(label=f"{timesheet['startDate']} ~ {timesheet['endDate']}", text="/status"),
-                                            MessageAction(label=f"紀錄時間:{timesheet['duration'] // 60}分鐘", text="/status"),
-                                            MessageAction(label="複製專案與活動", text=f"/start_activity {timesheet['project']['id']} {timesheet['project']['name']} {timesheet['activity']['id']} {timesheet['activity']['name']}"),
+                                            # MessageAction(label=f"{timesheet['startDate']} ~ {timesheet['endDate']}", text="/status"),
+                                            MessageAction(label=f"{timesheet['duration'] // 60}m {timesheet['startDate']}~{timesheet['endDate']}", text="/status"),
+                                            MessageAction(label="重複專案類型", text=f"/start_activity {timesheet['project']['id']} {timesheet['activity']['id']}"),
+                                            # MessageAction(label="複製事件資料", text=f"/start_timesheet {timesheet['project']['id']} {timesheet['activity']['id']} {timesheet['description']}")
+                                            ClipboardAction(label="複製事件資料", clipboardText=f"{timesheet['project']['name']} {timesheet['activity']['name']} {timesheet['description']}")
                                         ]
                                     ) for timesheet in recent_timesheet_list
                                 ]
