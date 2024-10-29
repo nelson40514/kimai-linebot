@@ -218,18 +218,18 @@ def start_activity(event, user, line_bot_api, project_id, activity_id):
         return
     project_name = project.get("name", "")
     activity_name = activity.get("name", "")
-    # update_user(user["line_user_id"], {
-    #     "current_activity": {
-    #         "project": {
-    #             "id": project_id,
-    #             "name": project_name
-    #         },
-    #         "activity": {
-    #             "id": activity_id,
-    #             "name": activity_name
-    #         }
-    #     }
-    # })
+    update_user(user["line_user_id"], {
+        "current_activity": {
+            "project": {
+                "id": project_id,
+                "name": project_name
+            },
+            "activity": {
+                "id": activity_id,
+                "name": activity_name
+            }
+        }
+    })
     line_bot_api.reply_message(
         ReplyMessageRequest(
             reply_token=event.reply_token,
