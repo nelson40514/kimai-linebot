@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 from argparse import ArgumentParser
 from flask import Flask, request, abort
+from flask import jsonify
 # from werkzeug.middleware.proxy_fix import ProxyFix
 
 from linebot.v3 import (
@@ -91,6 +92,69 @@ def index():
 @app.route("/loaderio-05a53ce781778efb8b4a1605c3741e70/")
 def loaderio():
     return "loaderio-05a53ce781778efb8b4a1605c3741e70"
+
+@app.route("/start", methods=['POST'])
+def start_route():
+    """
+    Starts a Kimai timesheet.
+
+    Args:
+        project_id (int): The ID of the project.
+        activity_id (int): The ID of the activity.
+        description (str): The description of the timesheet.
+
+    Returns:
+        json: A JSON response indicating success or failure.
+    """
+    data = request.get_json()
+    project_id = data.get('project_id')
+    activity_id = data.get('activity_id')
+    description = data.get('description')
+    user_id = data.get('user_id')  # Assuming you have a way to get the user ID
+
+    user = get_or_create_user(user_id)  # Get the user from your database
+
+    if not project_id or not activity_id or not description:
+        return jsonify({'success': False, 'error': 'Missing required parameters'}), 400
+
+    try:
+        kimai_start_timesheet(user, project_id, activity_id, description)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        app.logger.error(f"Error starting timesheet: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route("/stop", methods=['POST'])
+def stop_route():
+    """
+    Stops the currently running Kimai timesheet for a given user.
+
+    Args:
+        user_id (str): The ID of the user.
+
+    Returns:
+        json: A JSON response indicating success or failure.
+    """
+    data = request.get_json()
+    user_id = data.get('user_id')
+
+    if not user_id:
+        return jsonify({'success': False, 'error': 'Missing user_id parameter'}), 400
+
+    user = get_or_create_user(user_id)
+    current_timesheet = kimai_get_current_timesheet(user)
+
+    if not current_timesheet:
+        return jsonify({'success': False, 'error': 'No timesheet is currently running'}), 404
+
+    try:
+        kimai_stop_timesheet(user, current_timesheet["id"])
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        app.logger.error(f"Error stopping timesheet: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+    
 
 def get_or_create_user(line_user_id):
     user = users_collection.find_one({"line_user_id": line_user_id})
