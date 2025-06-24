@@ -154,6 +154,55 @@ def stop_route():
         app.logger.error(f"Error stopping timesheet: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route("/start_last", methods=['POST'])
+def start_last_route():
+    """
+    Starts the last recorded timesheet for a user.
+
+    Args:
+        user_id (str): The ID of the user.
+
+    Returns:
+        json: A JSON response indicating success or failure.
+    """
+    data = request.get_json()
+    user_id = data.get('user_id')
+
+    if not user_id:
+        return jsonify({'success': False, 'error': 'Missing user_id parameter'}), 400
+
+    user = get_or_create_user(user_id)
+    recent_timesheets = kimai_get_recent_timesheet(user, n=1)
+
+    if not recent_timesheets:
+        return jsonify({'success': False, 'error': 'No recent timesheets found for this user'}), 404
+
+    last_timesheet = recent_timesheets[0]
+    project_id = last_timesheet["project"]["id"]
+    activity_id = last_timesheet["activity"]["id"]
+    description = last_timesheet.get("description", "")
+
+    kimai_start_timesheet(user, project_id, activity_id, description)
+
+    try:
+        kimai_start_timesheet(user, project_id, activity_id, description)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        app.logger.error(f"Error starting last timesheet: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/start_last", methods=['POST'])
+def start_last_route():
+    """
+ Starts the last recorded timesheet for a user.
+
+ Args:
+ user_id (str): The ID of the user.
+
+ Returns:
+ json: A JSON response indicating success or failure.
+ """
     
 
 def get_or_create_user(line_user_id):
@@ -392,6 +441,60 @@ def handle_message(event):
             return
 
         # 開始時間追蹤(選擇專案)
+        if text == "/start_last":
+            recent_timesheets = kimai_get_recent_timesheet(user, n=1)
+            if not recent_timesheets:
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[
+                            TextMessage(
+                                text="您尚未有任何時間追蹤記錄可重複",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu(),
+                            )
+                        ]
+                    )
+                )
+                return
+            last_timesheet = recent_timesheets[0]
+            project_id = last_timesheet["project"]["id"]
+            activity_id = last_timesheet["activity"]["id"]
+            description = last_timesheet.get("description", "")
+
+            try:
+                res = kimai_start_timesheet(user, project_id, activity_id, description)
+                startTime = datetime.strptime(res["begin"], "%Y-%m-%dT%H:%M:%S%z")
+                project = kimai_get_project(user, project_id)
+                activity = kimai_get_activity(user, activity_id)
+                confirm_message = f"重複上次時間追蹤成功\n專案:{project['name']}\n活動:{activity['name']}\n描述:{description}\n從{startTime.strftime('%m/%d %H:%M')}開始"
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[
+                            TextMessage(
+                                text=confirm_message,
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu()
+                            )
+                        ]
+                    )
+                )
+            except Exception as e:
+                app.logger.error(e)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[
+                            TextMessage(
+                                text=f"開始失敗\n{str(e)}",
+                                quote_token=event.message.quote_token,
+                                quick_reply=get_quick_reply_menu()
+                            )
+                        ]
+                    )
+                )
+                return
         if text == "/start":
             start(event, user, line_bot_api)
             return
