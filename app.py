@@ -36,6 +36,7 @@ from linebot.v3.messaging import (
 )
 
 
+from config import LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN
 from db import users_collection
 from kimai import (
     kimai_get_project,
@@ -53,20 +54,15 @@ app = Flask(__name__)
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 # app.logger.setLevel(logging.INFO)
 
-# 設置環境變數
-channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
-channel_access_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
-if channel_secret is None or channel_access_token is None:
+# Check for environment variables
+if LINE_CHANNEL_SECRET is None or LINE_CHANNEL_ACCESS_TOKEN is None:
     print('Specify LINE_CHANNEL_SECRET and LINE_CHANNEL_ACCESS_TOKEN as environment variables.')
     sys.exit(1)
 
-
 # 初始化 LineBot
-lineHandler = WebhookHandler(channel_secret)
+lineHandler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-configuration = Configuration(
-    access_token=channel_access_token
-)
+configuration = Configuration(access_token=LINE_CHANNEL_ACCESS_TOKEN)
 
 
 @app.route("/")
@@ -190,20 +186,7 @@ def start_last_route():
     except Exception as e:
         app.logger.error(f"Error starting last timesheet: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
-
-@app.route("/start_last", methods=['POST'])
-def start_last_route():
-    """
- Starts the last recorded timesheet for a user.
-
- Args:
- user_id (str): The ID of the user.
-
- Returns:
- json: A JSON response indicating success or failure.
- """
-    
+  
 
 def get_or_create_user(line_user_id):
     user = users_collection.find_one({"line_user_id": line_user_id})

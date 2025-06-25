@@ -1,13 +1,8 @@
-import os
-import sys
-
 from pymongo import MongoClient
+from config import MONGODB_URI
 
-# 獲取環境變數
-MONGODB_URI = os.getenv('MONGODB_URI', None)
 if MONGODB_URI is None:
-    print('Specify MONGODB_URI as environment variables.')
-    sys.exit(1)
+    raise ValueError("MONGODB_URI is not set in the environment variables.")
 
 
 # 初始化 MongoDB

@@ -1,19 +1,11 @@
 import os
 import sys
 import json
-import pytz
 import requests
+from config import KIMAI_BASE_URL
 
 from datetime import datetime
 
-# 獲取環境變數
-KIMAI_BASE_URL = os.getenv('KIMAI_BASE_URL')
-if KIMAI_BASE_URL is None:
-    print('Specify KIMAI_BASE_URL as environment variables.')
-    sys.exit(1)
-
-# 設置時區
-TZ = pytz.timezone('Asia/Taipei')
 
 PROJECTS = []
 ACTIVITIES = []
