@@ -174,8 +174,8 @@ def start_last_route():
         return jsonify({'success': False, 'error': 'No recent timesheets found for this user'}), 404
 
     last_timesheet = recent_timesheets[0]
-    project_id = last_timesheet["project"]["id"]
-    activity_id = last_timesheet["activity"]["id"]
+    project_id = last_timesheet.get("project", 1)
+    activity_id = last_timesheet.get("activity", 1)
     description = last_timesheet.get("description", "")
 
     kimai_start_timesheet(user, project_id, activity_id, description)
