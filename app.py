@@ -178,8 +178,6 @@ def start_last_route():
     activity_id = last_timesheet.get("activity", 1)
     description = last_timesheet.get("description", "")
 
-    kimai_start_timesheet(user, project_id, activity_id, description)
-
     try:
         kimai_start_timesheet(user, project_id, activity_id, description)
         return jsonify({'success': True}), 200
